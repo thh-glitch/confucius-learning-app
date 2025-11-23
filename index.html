@@ -1,396 +1,55 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>孔子周遊列國 | 儒家思想互動教學</title>
+    <title>至聖先師：孔子周遊列國互動圖</title>
     
-    <!-- React & ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
-    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Tailwind CSS -->
+
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Lucide Icons (Script version) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- Google Fonts: Noto Serif TC (古風) & Noto Sans TC -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;700;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Noto Serif TC"', 'serif'],
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                    },
+                    colors: {
+                        'paper': '#fdfbf7',
+                        'ink': '#1c1917',
+                        'seal-red': '#b91c1c',
+                        'jade': '#376e6f',
+                        'gold': '#d97706',
+                    },
+                    backgroundImage: {
+                        'texture': "url('https://www.transparenttextures.com/patterns/cream-paper.png')",
+                    }
+                }
+            }
+        }
+    </script>
 
     <style>
         body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #fdfbf7; /* 宣紙色 */
-            color: #44403c;
-        }
-        .font-serif-tc {
-            font-family: 'Noto Serif TC', serif;
-        }
-        .font-calligraphy {
-            font-family: 'Ma Shan Zheng', cursive;
-        }
-        .bamboo-bg {
             background-color: #fdfbf7;
-            background-image: linear-gradient(90deg, rgba(200,180,160,0.1) 1px, transparent 1px);
-            background-size: 40px 100%;
+            background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png');
         }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
+        /* Custom Scrollbar for Chat */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
         }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1; 
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #d6d3d1; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a8a29e; 
-        }
-        
-        .typing-dot {
-            animation: typing 1.4s infinite ease-in-out both;
-        }
-        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-        
-        @keyframes typing {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
-        
-        /* Wood Texture for Sidebar */
-        .wood-texture {
-            background-color: #5d4037;
-            background-image: url("https://www.transparenttextures.com/patterns/wood-pattern.png");
-        }
-    </style>
-</head>
-<body>
-    <div id="root"></div>
-
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
-
-        // --- Icons Helper ---
-        // 因為在瀏覽器直接運行，我們需要一個 Helper 來讓 <Icon /> 語法生效
-        const Icon = ({ name, className, size = 24 }) => {
-            useEffect(() => {
-                if (window.lucide) window.lucide.createIcons();
-            }, [name]);
-            return <i data-lucide={name} className={className} style={{ width: size, height: size }}></i>;
-        };
-
-        // 定義您代碼中用到的圖標組件
-        const MapPin = (p) => <Icon name="map-pin" {...p} />;
-        const BookOpen = (p) => <Icon name="book-open" {...p} />;
-        const ChevronRight = (p) => <Icon name="chevron-right" {...p} />;
-        const ChevronLeft = (p) => <Icon name="chevron-left" {...p} />;
-        const MessageCircle = (p) => <Icon name="message-circle" {...p} />;
-        const Award = (p) => <Icon name="award" {...p} />;
-        const Users = (p) => <Icon name="users" {...p} />;
-        const ShieldAlert = (p) => <Icon name="shield-alert" {...p} />;
-        const Scroll = (p) => <Icon name="scroll" {...p} />;
-        const Compass = (p) => <Icon name="compass" {...p} />;
-        const Sparkles = (p) => <Icon name="sparkles" {...p} />;
-        const Send = (p) => <Icon name="send" {...p} />;
-        const Loader2 = (p) => <Icon name="loader-2" {...p} />;
-        const X = (p) => <Icon name="x" {...p} />;
-
-        // --- Gemini API Configuration ---
-        const apiKey = ""; // 系統運行時會自動注入 Key
-        const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
-
-        async function callGemini(prompt, systemInstruction = "") {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
-                systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined
-            };
-
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                return data.candidates?.[0]?.content?.parts?.[0]?.text || "（孔子沈思不語...）";
-            } catch (error) {
-                console.error(error);
-                return "吾之思緒似被雲霧遮蔽（網絡錯誤），請稍後再問。";
-            }
-        }
-
-        // --- Data: 孔子生平與周遊列國 ---
-        const JOURNEY_STAGES = [
-            {
-                id: 'lu-early',
-                title: '初仕魯國：大治之世',
-                location: '魯國 (Lu)',
-                year: '約公元前 500 年 (51歲)',
-                icon: <Award className="text-amber-600" />,
-                description: '孔子在魯國任中都宰，後升任大司寇（掌管刑獄糾察）。他推行禮樂教化，魯國大治，路不拾遺，夜不閉戶。齊國因恐懼魯國強大，送美女駿馬給魯定公，導致定公沈迷聲色，不理朝政。',
-                philosophy: '「道之以政，齊之以刑，民免而無恥；道之以德，齊之以禮，有恥且格。」'
-            },
-            {
-                id: 'wei',
-                title: '適衛：子見南子',
-                location: '衛國 (Wei)',
-                year: '約公元前 497 年',
-                icon: <Users className="text-blue-600" />,
-                description: '孔子離開魯國，首先來到衛國。衛靈公雖敬重孔子，但更寵愛夫人南子，且未重用孔子的政治主張。孔子在此期間曾感嘆「吾未見好德如好色者也」。',
-                philosophy: '「君子喻於義，小人喻於利。」'
-            },
-            {
-                id: 'chen-cai',
-                title: '陳蔡之厄：絕糧七日',
-                location: '陳國與蔡國之間',
-                year: '約公元前 489 年',
-                icon: <ShieldAlert className="text-red-600" />,
-                description: '孔子在陳、蔡兩國之間被圍困，糧食斷絕，隨行弟子多病倒。即便在如此困境中，孔子依然講誦弦歌不衰，展現了極高的修養與定力。',
-                philosophy: '「歲寒，然後知松柏之後凋也。」'
-            },
-            {
-                id: 'return-lu',
-                title: '葉落歸根：刪述六經',
-                location: '魯國 (Lu)',
-                year: '約公元前 484 年 (68歲)',
-                icon: <BookOpen className="text-green-700" />,
-                description: '在外周遊十四年後，孔子回到魯國。他不再求仕，而是專心整理古籍（詩、書、禮、樂、易、春秋）並致力於教育，弟子三千，賢者七十二。',
-                philosophy: '「有教無類。」'
-            }
-        ];
-
-        // --- Main App Component ---
-        const App = () => {
-            const [activeStage, setActiveStage] = useState(JOURNEY_STAGES[0]);
-            const [showChat, setShowChat] = useState(false);
-            
-            // Chat State
-            const [chatHistory, setChatHistory] = useState([
-                { role: 'ai', text: '有朋自遠方來，不亦樂乎？吾乃孔丘。關於為政、修身或吾之周遊經歷，願與子共析之。' }
-            ]);
-            const [chatMessage, setChatMessage] = useState('');
-            const [isChatLoading, setIsChatLoading] = useState(false);
-            const chatEndRef = useRef(null);
-
-            useEffect(() => {
-                chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-            }, [chatHistory, showChat]);
-
-            const handleAskConfucius = async (e) => {
-                e.preventDefault();
-                if (!chatMessage.trim() || isChatLoading) return;
-
-                const userMsg = chatMessage;
-                setChatMessage('');
-                setChatHistory(prev => [...prev, { role: 'user', text: userMsg }]);
-                setIsChatLoading(true);
-
-                const systemPrompt = `你是孔子（Confucius），生活在春秋末期。請用文言文夾雜白話文（便於現代學生理解）的風格回答。
-                你的性格溫和、循循善誘，強調「仁」、「禮」、「君子」之道。
-                如果學生問你周遊列國的經歷，請結合你的遭遇（如在陳絕糧）來回答。
-                請以繁體中文回答。`;
-
-                const reply = await callGemini(userMsg, systemPrompt);
-                setChatHistory(prev => [...prev, { role: 'ai', text: reply }]);
-                setIsChatLoading(false);
-            };
-
-            return (
-                <div className="flex h-screen overflow-hidden bamboo-bg">
-                    {/* Sidebar: Journey Navigation */}
-                    <div className="w-20 md:w-80 wood-texture text-amber-50 flex flex-col border-r-4 border-amber-900 shadow-2xl z-10 flex-shrink-0 transition-all duration-300">
-                        <div className="p-6 text-center border-b border-amber-800/50 bg-black/20">
-                            <div className="w-12 h-12 md:w-16 md:h-16 bg-amber-100 rounded-full mx-auto flex items-center justify-center text-amber-900 border-4 border-amber-800 mb-3">
-                                <span className="font-calligraphy text-2xl md:text-3xl">孔</span>
-                            </div>
-                            <h1 className="hidden md:block text-2xl font-serif-tc font-bold tracking-widest text-amber-100">至聖先師</h1>
-                            <p className="hidden md:block text-xs text-amber-300 mt-1 opacity-80">周遊列國 · 儒家之道</p>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto py-4 space-y-2">
-                            {JOURNEY_STAGES.map((stage) => (
-                                <button
-                                    key={stage.id}
-                                    onClick={() => setActiveStage(stage)}
-                                    className={`w-full px-4 py-4 flex items-center transition-all duration-200 relative
-                                        ${activeStage.id === stage.id 
-                                            ? 'bg-amber-900/60 text-white border-l-4 border-yellow-500' 
-                                            : 'hover:bg-amber-900/30 text-amber-200/80 hover:text-white border-l-4 border-transparent'
-                                        }`}
-                                >
-                                    <div className="mr-4">{stage.icon}</div>
-                                    <div className="hidden md:block text-left">
-                                        <div className="font-bold text-sm md:text-base">{stage.title}</div>
-                                        <div className="text-xs opacity-70">{stage.location}</div>
-                                    </div>
-                                    {activeStage.id === stage.id && (
-                                        <div className="absolute right-4 text-yellow-500 animate-pulse hidden md:block">
-                                            <Compass size={16} />
-                                        </div>
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-                        
-                        <div className="p-4 border-t border-amber-800/50 bg-black/20">
-                            <button 
-                                onClick={() => setShowChat(true)}
-                                className="w-full bg-amber-700 hover:bg-amber-600 text-white py-3 rounded-lg flex items-center justify-center space-x-2 transition-colors shadow-lg group"
-                            >
-                                <MessageCircle className="group-hover:scale-110 transition-transform" />
-                                <span className="hidden md:inline font-bold">問道於孔子</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Main Content Area */}
-                    <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-                        {/* Content Header */}
-                        <header className="bg-white/80 backdrop-blur-sm border-b border-stone-200 p-6 md:p-8 flex justify-between items-center shadow-sm">
-                            <div>
-                                <h2 className="text-3xl md:text-4xl font-serif-tc font-bold text-stone-800 mb-2 flex items-center">
-                                    {activeStage.title}
-                                </h2>
-                                <div className="flex items-center text-stone-500 space-x-4 text-sm md:text-base">
-                                    <span className="flex items-center"><MapPin size={16} className="mr-1" /> {activeStage.location}</span>
-                                    <span className="flex items-center"><Compass size={16} className="mr-1" /> {activeStage.year}</span>
-                                </div>
-                            </div>
-                            <div className="hidden md:block opacity-20 pointer-events-none">
-                                <Scroll size={64} />
-                            </div>
-                        </header>
-
-                        {/* Content Scrollable */}
-                        <main className="flex-1 overflow-y-auto p-6 md:p-10">
-                            <div className="max-w-4xl mx-auto space-y-8">
-                                {/* Description Card */}
-                                <div className="bg-white p-8 rounded-2xl shadow-sm border border-stone-100 leading-loose text-lg text-stone-700">
-                                    {activeStage.description}
-                                </div>
-
-                                {/* Philosophy Highlight */}
-                                <div className="relative">
-                                    <div className="absolute -left-2 -top-2 text-amber-200 opacity-50">
-                                        <i data-lucide="quote" size={48}></i>
-                                    </div>
-                                    <div className="bg-stone-800 text-stone-100 p-8 rounded-xl shadow-lg border-l-8 border-amber-600">
-                                        <h3 className="text-amber-500 font-bold mb-3 uppercase tracking-widest text-sm">核心思想</h3>
-                                        <p className="text-2xl md:text-3xl font-serif-tc font-bold leading-relaxed italic">
-                                            {activeStage.philosophy}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Interactive Element (Placeholder for more content) */}
-                                <div className="grid md:grid-cols-2 gap-6 mt-8">
-                                    <div className="bg-amber-50 p-6 rounded-xl border border-amber-100">
-                                        <h4 className="font-bold text-amber-900 mb-2 flex items-center">
-                                            <Sparkles className="mr-2 w-5 h-5" /> 歷史背景
-                                        </h4>
-                                        <p className="text-sm text-amber-900/80 leading-relaxed">
-                                            春秋末期，禮崩樂壞。孔子試圖恢復周禮，卻在各國間碰壁。這段旅程不僅是政治實踐，更是儒家思想成熟的關鍵時期。
-                                        </p>
-                                    </div>
-                                    <div className="bg-stone-100 p-6 rounded-xl border border-stone-200">
-                                        <h4 className="font-bold text-stone-700 mb-2 flex items-center">
-                                            <BookOpen className="mr-2 w-5 h-5" /> 延伸思考
-                                        </h4>
-                                        <p className="text-sm text-stone-600 leading-relaxed">
-                                            如果是你處在孔子當時「陳蔡絕糧」的困境，你會堅持原則，還是選擇妥協？這對現代人有什麼啟發？
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </main>
-
-                        {/* Chat Modal Overlay */}
-                        {showChat && (
-                            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                                <div className="bg-white w-full max-w-2xl h-[600px] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-stone-200 animate-[fadeIn_0.3s_ease-out]">
-                                    {/* Chat Header */}
-                                    <div className="bg-amber-800 text-amber-50 p-4 flex justify-between items-center">
-                                        <div className="flex items-center space-x-3">
-                                            <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-900 font-bold border-2 border-white">
-                                                孔
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold">孔夫子 AI</h3>
-                                                <p className="text-xs text-amber-200">循循善誘 · 誨人不倦</p>
-                                            </div>
-                                        </div>
-                                        <button 
-                                            onClick={() => setShowChat(false)}
-                                            className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                                        >
-                                            <X size={24} />
-                                        </button>
-                                    </div>
-
-                                    {/* Chat Body */}
-                                    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-stone-50">
-                                        {chatHistory.map((msg, idx) => (
-                                            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                                <div className={`max-w-[80%] rounded-2xl px-5 py-3 shadow-sm leading-relaxed ${
-                                                    msg.role === 'user' 
-                                                        ? 'bg-amber-600 text-white rounded-tr-none' 
-                                                        : 'bg-white text-stone-800 border border-stone-200 rounded-tl-none font-serif-tc'
-                                                }`}>
-                                                    {msg.text}
-                                                </div>
-                                            </div>
-                                        ))}
-                                        {isChatLoading && (
-                                            <div className="flex justify-start">
-                                                <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-stone-200 flex items-center gap-2 text-stone-400 text-sm">
-                                                    <Loader2 className="w-4 h-4 animate-spin" /> 
-                                                    <span>孔子沈思中...</span>
-                                                </div>
-                                            </div>
-                                        )}
-                                        <div ref={chatEndRef} />
-                                    </div>
-
-                                    {/* Chat Input */}
-                                    <form onSubmit={handleAskConfucius} className="p-4 bg-white border-t border-stone-100">
-                                        <div className="flex gap-2">
-                                            <input 
-                                                type="text" 
-                                                value={chatMessage}
-                                                onChange={(e) => setChatMessage(e.target.value)}
-                                                placeholder="請輸入您的問題..."
-                                                className="flex-1 px-4 py-2 bg-stone-100 rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500 border-transparent text-sm"
-                                            />
-                                            <button 
-                                                type="submit"
-                                                disabled={isChatLoading || !chatMessage.trim()}
-                                                className="p-2 bg-amber-600 text-white rounded-full hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                            >
-                                                <Send className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+        .prose p
